@@ -1,0 +1,74 @@
+/* ---------------------------------- Estilos generales ---------------------------------- */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* ---------------------------------- Encabezado ---------------------------------- */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 5px;
+}
+
+header h2 {
+    font-size: 1.5em;
+    color: #666;
+    font-weight: normal;
+}
+
+/* ---------------------------------- Navegación ----------------------------------  */
+nav {
+    margin-bottom: 30px;
+}
+
+nav table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+nav td {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: #666;
+}
+
+/* ---------------------------------- Sección de planta ---------------------------------- */
+#plantas {
+    margin-bottom: 30px;
+}
+
+#planta p {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* ---------------------------------- Pie de página ---------------------------------- */
+footer {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-size: 0.9em;
+}
