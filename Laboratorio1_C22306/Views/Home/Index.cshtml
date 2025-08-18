@@ -1,8 +1,21 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Mi primera vista";
+    string autor = "Escriba su nombre";
+    int edad = 25;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <div>
+        <h1>Modificando una vista</h1>
+        <p>
+            <strong>Yo soy: </strong> @autor<br />
+            Mi edad es <input type="number" value="@edad" placeholder="Escriba su edad" />
+        </p>
+    </div>
+</body>
+</html>
