@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Mi primera vista";
-    string autor = "Escriba su nombre";
-    int edad = 25;
+    string autor = "Mario Cordero";
+    int edad = 22;
 }
 
 <!DOCTYPE html>
@@ -15,6 +15,10 @@
         <p>
             <strong>Yo soy: </strong> @autor<br />
             Mi edad es <input type="number" value="@edad" placeholder="Escriba su edad" />
+            <div>
+                <label>Pertenezco al equipo de PI llamado: </label>
+                <input type="text" placeholder="nombre" />
+            </div>
         </p>
     </div>
 </body>
