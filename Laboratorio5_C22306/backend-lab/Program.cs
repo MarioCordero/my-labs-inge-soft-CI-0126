@@ -1,18 +1,27 @@
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:8080");
-                          policy.AllowAnyMethod();
-                          policy.AllowAnyHeader();
+                          policy.WithOrigins("http://localhost:8080")
+                                .AllowAnyMethod()
+                                .AllowAnyHeader();
                       });
 });
 
-// Resto de la configuración...
+// Agrega servicios necesarios
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddAuthorization();
+
+// Inyección de dependencias personalizadas
+builder.Services.AddScoped<backend_lab_C22306.Services.CountryService>();
+builder.Services.AddScoped<backend_lab_C22306.Repositories.CountryRepository>();
 
 var app = builder.Build();
 

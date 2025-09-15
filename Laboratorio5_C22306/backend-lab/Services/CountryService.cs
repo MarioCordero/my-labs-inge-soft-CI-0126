@@ -29,5 +29,17 @@ namespace backend_lab_C22306.Services
         {
             return countryRepository.GetCountries();
         }
+
+        public string CreateCountry(CountryModel country)
+        {
+            try
+            {
+                bool success = countryRepository.CreateCountry(country);
+                return success ? "" : "No se pudo crear el país";
+            }catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
     }
 }
