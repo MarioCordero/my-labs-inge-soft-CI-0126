@@ -3,43 +3,27 @@ using backend_lab_C22306.Repositories;
 
 namespace backend_lab_C22306.Services
 {
-    /// <summary>
-    /// Service layer for country-related business logic.
-    /// </summary>
     public class CountryService
     {
-        /// <summary>
-        /// Repository for accessing country data.
-        /// </summary>
-        private readonly CountryRepository countryRepository;
+        private readonly CountryRepository _countryRepository;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CountryService"/> class.
-        /// </summary>
-        public CountryService()
+        public CountryService(CountryRepository countryRepository)
         {
-            countryRepository = new CountryRepository();
+            _countryRepository = countryRepository;
         }
 
-        /// <summary>
-        /// Retrieves all countries using the repository.
-        /// </summary>
-        /// <returns>List of <see cref="CountryModel"/> objects.</returns>
         public List<CountryModel> GetCountries()
         {
-            return countryRepository.GetCountries();
+            return _countryRepository.GetCountries();
         }
 
-        public string CreateCountry(CountryModel country)
+        public bool CreateCountry(CountryModel country)
         {
-            try
-            {
-                bool success = countryRepository.CreateCountry(country);
-                return success ? "" : "No se pudo crear el país";
-            }catch (Exception ex)
-            {
-                return ex.Message;
-            }
+            return _countryRepository.CreateCountry(country);
+        }
+        public bool DeleteCountry(int id)
+        {
+            return _countryRepository.DeleteCountry(id);
         }
     }
 }

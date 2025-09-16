@@ -9,6 +9,18 @@ En este laboratorio desarrollé una aplicación fullstack que conecta un fronten
 ## ¿Qué hice? (Guía de desarrollo)
 
 ### Backend (.NET Core)
+
+
+Como consulto DB
+sudo docker exec -it sqlserver2025 /bin/bash
+
+sudo docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=MyStrongPassword123" \
+-p 1433:1433 --name sqlserver2025 -d mcr.microsoft.com/mssql/server:2022-latest
+
+Me conecto a DB por medio de la extension de VS Code
+
+
+
 1. Creé la base de datos y la tabla `Country` con las columnas:
     - `Name` (string)
     - `Continent` (string)
@@ -40,17 +52,43 @@ En este laboratorio desarrollé una aplicación fullstack que conecta un fronten
     npm install axios
     npm install vue-router@4 --save
     ```
-2. Configuré Vue Router con dos rutas: `/` para la lista y `/country` para el formulario.
+2. **Instalé y configuré Vue Router** para la navegación entre componentes:
+    - Instalé el paquete:
+      ```bash
+      npm install vue-router@4 --save
+      ```
+    - En `src/main.js` importé y configuré las rutas:
+      ```js
+      import { createRouter, createWebHistory } from 'vue-router'
+      import CountriesList from './components/CountriesList.vue'
+      import CountryForm from './components/CountryForm.vue'
+      import HelloWorld from './components/HelloWorld.vue'
+
+      const routes = [
+        { path: '/', component: CountriesList },
+        { path: '/country', component: CountryForm },
+        { path: '/hello', component: HelloWorld, props: { msg: 'Hello World desde ruta /hello' } }
+      ]
+
+      const router = createRouter({
+        history: createWebHistory(),
+        routes
+      })
+
+      createApp(App).use(router).mount('#app')
+      ```
+    - Ahora la app soporta navegación entre la lista, el formulario y una ruta de ejemplo `/hello`.
+
 3. Implementé los componentes:
     - **CountriesList.vue**: muestra la lista de países, permite eliminar y navegar al formulario.
     - **CountryForm.vue**: formulario con validaciones, select de continente, POST a la API y redirección.
+
 4. Arranqué el frontend con:
     ```bash
     npm run serve
     ```
     El frontend quedó corriendo en `http://localhost:8080`.
-
----
+    ```
 
 ## Estructura del proyecto
 

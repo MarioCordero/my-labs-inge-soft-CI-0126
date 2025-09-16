@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using backend_lab_C22306.Models;
-using backend_lab_C22306.Services; // <-- Agrega este using
+using backend_lab_C22306.Services;
 
 namespace backend_lab_C22306.Controllers
 {
@@ -10,28 +10,40 @@ namespace backend_lab_C22306.Controllers
     {
         private readonly CountryService _countryService;
 
-        public CountryController(CountryService countryService)// <-- Agrega este constructor
+        public CountryController(CountryService countryService)
         {
             _countryService = countryService;
         }
 
         [HttpGet]
-        public string Get()
+        public IActionResult Get()
         {
-            return "Hola Mundo";
+            var countries = _countryService.GetCountries();
+            return Ok(countries);
         }
 
         [HttpPost]
-        public IActionResult CreateCountry([FromBody] CountryModel country)
+        public IActionResult Post([FromBody] CountryModel country)
         {
-            if (country == null)
-                return BadRequest("El país no puede ser nulo");
+            if (country == null || string.IsNullOrEmpty(country.Name) || string.IsNullOrEmpty(country.Continent) || string.IsNullOrEmpty(country.Language))
+            {
+                return BadRequest("Datos inválidos");
+            }
 
             var result = _countryService.CreateCountry(country);
-            if (string.IsNullOrEmpty(result))
-                return Ok(true);
-            else
-                return BadRequest(result);
+            if (!result)
+                return BadRequest("No se pudo crear el país");
+
+            return Ok(country);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var result = _countryService.DeleteCountry(id);
+            if (!result)
+                return NotFound("No se pudo eliminar el país");
+            return NoContent();
         }
     }
 }

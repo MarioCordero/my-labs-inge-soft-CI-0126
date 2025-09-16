@@ -20,15 +20,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(country, index) of countries" :key="index">
-          <td>{{ country.name }}</td>
-          <td>{{ country.continent }}</td>
-          <td>{{ country.language }}</td>
-          <td>
-            <button class="btn btn-warning btn-sm">Editar</button>
-            <button @click="deleteCountry(index)" class="btn btn-danger btn-sm ms-1">Eliminar</button>
-          </td>
-        </tr>
+      <tr v-for="(country, index) of countries" :key="country.Id">
+        <td>{{ country.name }}</td>
+        <td>{{ country.continent }}</td>
+        <td>{{ country.language }}</td>
+        <td>
+          <button class="btn btn-warning btn-sm">Editar</button>
+          <button @click="deleteCountry(index)" class="btn btn-danger btn-sm ms-1">Eliminar</button>
+        </td>
+      </tr>
       </tbody>
     </table>
   </div>
@@ -45,11 +45,20 @@ export default {
     };
   },
   methods: {
-    deleteCountry(index) {
-      this.countries.splice(index, 1);
-    },
+deleteCountry(index) {
+  const country = this.countries[index];
+  console.log("ID del país a eliminar:", country.id); // <-- Cambia a minúscula
+  axios.delete(`http://localhost:5172/api/country/${country.id}`) // <-- Cambia a minúscula
+    .then(() => {
+      this.getCountries();
+    })
+    .catch((error) => {
+      alert("Error al eliminar el país.");
+      console.error(error);
+    });
+},
     getCountries() {
-      axios.get("https://localhost:7019/api/country")
+      axios.get("http://localhost:5172/api/country")
         .then((response) => {
           this.countries = response.data;
         })
@@ -63,7 +72,3 @@ export default {
   }
 };
 </script>
-
-<style>
-/* Estilos opcionales */
-</style>

@@ -57,5 +57,14 @@ namespace backend_lab_C22306.Repositories
                 return false;
             }
         }
+        public bool DeleteCountry(int id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql = "DELETE FROM Country WHERE Id = @Id";
+                var rows = connection.Execute(sql, new { Id = id });
+                return rows > 0;
+            }
+        }
     }
 }

@@ -69,7 +69,7 @@ export default {
       console.log("Datos a guardar:", this.formData);
       
       axios
-        .post("https://localhost:7019/api/country", this.formData)
+        .post("http://localhost:5172/api/country", this.formData)
         .then((response) => {
           console.log("Respuesta del servidor:", response);
           this.$router.push("/");
@@ -82,7 +82,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-/* Estilos específicos para este componente */
-</style>
