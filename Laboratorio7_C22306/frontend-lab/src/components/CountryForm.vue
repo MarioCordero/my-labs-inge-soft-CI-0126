@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { createCountry } from '../config/api';
 
 export default {
   name: "CountryForm",
@@ -68,8 +68,7 @@ export default {
     saveCountry() {
       console.log("Datos a guardar:", this.formData);
       
-      axios
-        .post("http://localhost:5172/api/country", this.formData)
+      createCountry(this.formData)
         .then((response) => {
           console.log("Respuesta del servidor:", response);
           this.$router.push("/");
