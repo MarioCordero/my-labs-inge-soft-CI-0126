@@ -35,7 +35,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { getCountries as apiGetCountries, deleteCountry as apiDeleteCountry } from '../config/api';
 
 export default {
   name: "CountriesList",
@@ -45,20 +45,19 @@ export default {
     };
   },
   methods: {
-deleteCountry(index) {
-  const country = this.countries[index];
-  console.log("ID del país a eliminar:", country.id); // <-- Cambia a minúscula
-  axios.delete(`http://localhost:5172/api/country/${country.id}`) // <-- Cambia a minúscula
-    .then(() => {
-      this.getCountries();
-    })
-    .catch((error) => {
-      alert("Error al eliminar el país.");
-      console.error(error);
-    });
-},
+    deleteCountry(index) {
+      const country = this.countries[index];
+      apiDeleteCountry(country.id)
+        .then(() => {
+          this.getCountries();
+        })
+        .catch((error) => {
+          alert("Error al eliminar el país.");
+          console.error(error);
+        });
+    },
     getCountries() {
-      axios.get("http://localhost:5172/api/country")
+      apiGetCountries()
         .then((response) => {
           this.countries = response.data;
         })

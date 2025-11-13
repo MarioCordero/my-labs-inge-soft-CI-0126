@@ -1,7 +1,6 @@
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
-
-// Configuración de CORS
+builder.WebHost.UseUrls(Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://localhost:5011");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -12,29 +11,28 @@ builder.Services.AddCors(options =>
                                 .AllowAnyHeader();
                       });
 });
-
-// Agrega servicios necesarios
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 
-// Inyección de dependencias personalizadas
 builder.Services.AddScoped<backend_lab_C22306.Services.CountryService>();
 builder.Services.AddScoped<backend_lab_C22306.Repositories.CountryRepository>();
 
 var app = builder.Build();
 
-// Configurar el pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.RoutePrefix = string.Empty;
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+    });
 }
 
 app.UseHttpsRedirection();
 app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
