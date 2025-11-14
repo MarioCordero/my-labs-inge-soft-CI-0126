@@ -1,7 +1,7 @@
-# Laboratorio #5 - Vue.js + ASP.NET Core
+# Laboratorio #6 - Vue.js + ASP.NET Core + Selenium UI Testing
 
 ## Descripción
-En este laboratorio desarrollé una aplicación fullstack que conecta un frontend en Vue.js con un backend en ASP.NET Core, usando una API REST para gestionar países. Toda la consulta y administración de la base de datos la realicé directamente desde Visual Studio Code, usando extensiones para conectarme y ejecutar queries en SQL Server.
+En este laboratorio desarrollé una aplicación fullstack que conecta un frontend en Vue.js con un backend en ASP.NET Core, usando una API REST para gestionar países. Además, implementé **pruebas automatizadas de UI con Selenium WebDriver** para verificar el funcionamiento completo de la aplicación. Toda la consulta y administración de la base de datos la realicé directamente desde Visual Studio Code, usando extensiones para conectarme y ejecutar queries en SQL Server.
 
 ---
 
@@ -88,10 +88,50 @@ En este laboratorio desarrollé una aplicación fullstack que conecta un fronten
 
 ---
 
+### Automatización UI con Selenium
+
+**¿Qué agregué para las pruebas automatizadas?**
+
+1. **Creé el proyecto de pruebas UIAutomationTests:**
+    ```bash
+    dotnet new nunit -n UIAutomationTests
+    cd UIAutomationTests
+    dotnet add package Selenium.WebDriver
+    dotnet add package Selenium.WebDriver.ChromeDriver
+    dotnet add package Selenium.Support
+    ```
+
+2. **Implementé 6 tests automatizados** en `CompleteSeleniumTests.cs`:
+    - ✅ **HomePage_LoadsCorrectly**: Verifica que la página principal carga y muestra la tabla
+    - ✅ **Navigation_ToCreateForm_Works**: Prueba la navegación al formulario de creación
+    - ✅ **CreateCountry_Form_Validation**: Valida que los campos del formulario están presentes
+    - ✅ **CreateNewCountry_Successfully**: Crea un país completo y verifica que aparece en la lista
+    - ✅ **CountryTable_HasRequiredColumns**: Verifica las columnas de la tabla (Nombre, Continente, Idioma, Acciones)
+    - ✅ **Page_Elements_AreInteractive**: Comprueba que los elementos de la página son interactivos
+
+3. **Configuré ChromeDriver** con opciones optimizadas para Linux:
+    ```csharp
+    var chromeOptions = new ChromeOptions();
+    chromeOptions.AddArgument("--no-sandbox");
+    chromeOptions.AddArgument("--disable-dev-shm-usage");
+    chromeOptions.AddArgument("--window-size=1920,1080");
+    chromeOptions.AddArgument("--start-maximized");
+    ```
+
+4. **Implementé helpers robustos:**
+    - `FindElementWithRetry()`: Busca elementos con múltiples selectores de fallback
+    - `TryClick()`: Intenta hacer click con diferentes métodos (normal, Actions, JavaScript)
+    - `TakeScreenshot()`: Captura pantallas para debug
+    - `DumpPageSource()`: Guarda el HTML para análisis
+
+5. **Sistema de artifacts**: Screenshots y HTML se guardan en `Docs/screenshots/` y `Docs/page-source/`
+
+---
+
 ## Estructura del proyecto
 
 ```
-Laboratorio5_C22306/
+Laboratorio6_C22306/
 ├── backend-lab/
 │   ├── Controllers/
 │   │   └── CountryController.cs
@@ -102,24 +142,100 @@ Laboratorio5_C22306/
 │   ├── Services/
 │   │   └── CountryService.cs
 │   └── Program.cs
-└── frontend-lab/
-     ├── src/
-     │   ├── components/
-     │   │   ├── CountriesList.vue
-     │   │   └── CountryForm.vue
-     │   └── main.js
-     └── ...
+├── frontend-lab/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── CountriesList.vue
+│   │   │   └── CountryForm.vue
+│   │   └── main.js
+│   └── ...
+├── UIAutomationTests/
+│   ├── CompleteSeleniumTests.cs
+│   ├── UIAutomationTests.csproj
+│   └── artifacts/
+├── Docs/
+│   ├── logs/
+│   ├── screenshots/
+│   └── page-source/
+├── start-all.sh (🔥 NUEVO)
+└── readme.md
 ```
 
 ---
 
-## Validaciones y manejo de errores
+## 🚀 ¿Cómo ejecutar todo? (Guía completa)
 
-- Todos los campos del formulario son requeridos.
-- El select de continente tiene opciones predefinidas.
-- Si aparece un error de CORS, revisé la configuración en `Program.cs`.
-- Si hay error de conexión, verifiqué que el backend esté corriendo y la URL sea correcta.
-- Si el navegador advierte sobre el certificado, acepté el riesgo temporalmente para desarrollo.
+### Opción 1: Script automatizado (RECOMENDADO)
+
+**Ejecuta todo de una vez:**
+```bash
+./start-all.sh
+```
+
+Este script:
+1. ✅ Arranca el **backend** en background
+2. ✅ Arranca el **frontend** en background  
+3. ✅ Espera a que ambos servicios respondan
+4. ✅ Ejecuta las **6 pruebas de Selenium** automáticamente
+5. ✅ Guarda logs en `Docs/logs/`
+6. ✅ Guarda screenshots en `Docs/screenshots/`
+7. ✅ Limpia procesos al terminar
+
+**Salida esperada:**
+```
+Starting frontend...
+Frontend PID: 1234 (logs: Docs/logs/frontend.log)
+Starting backend...
+Backend PID: 5678 (logs: Docs/logs/backend.log)
+Waiting for frontend (http://localhost:8080/) ...
+OK: http://localhost:8080/
+Waiting for backend (ports 5000/5001) or log readiness...
+Backend ready.
+Running UI tests...
+✅ 5/6 tests passed
+```
+
+### Opción 2: Paso a paso (Manual)
+
+**1. Backend:**
+```bash
+cd backend-lab
+dotnet run
+# Debe mostrar: https://localhost:7019
+```
+
+**2. Frontend (en otra terminal):**
+```bash
+cd frontend-lab
+npm install
+npm run serve
+# Debe mostrar: http://localhost:8080
+```
+
+**3. Pruebas Selenium (en tercera terminal):**
+```bash
+cd UIAutomationTests
+dotnet test --logger "console;verbosity=detailed"
+```
+
+---
+
+## Validaciones y pruebas automatizadas
+
+### Tests implementados:
+- **Carga de página**: Verifica título, tabla y columnas
+- **Navegación**: Prueba el botón "Agregar país" → formulario
+- **Formulario**: Valida campos (name, language, continent) y botón submit
+- **Creación completa**: Llena formulario → envía → verifica país en lista
+- **Estructura de tabla**: Confirma columnas requeridas
+- **Interactividad**: Cuenta elementos clickeables
+
+### Manejo de errores en tests:
+- **Screenshots automáticos** cuando falla un test
+- **Page source HTML** guardado para debugging
+- **Selectores múltiples** para mayor robustez
+- **Timeouts configurables** para esperar carga de Vue.js
+- **Limpieza automática** de procesos ChromeDriver
 
 ---
 
@@ -128,10 +244,67 @@ Laboratorio5_C22306/
 ```json
 {
   "name": "string",
-  "continent": "string",
+  "continent": "string", 
   "language": "string"
 }
 ```
+
+---
+
+## Debugging y troubleshooting
+
+### Si fallan las pruebas:
+1. **Revisa screenshots**: `Docs/screenshots/`
+2. **Revisa HTML**: `Docs/page-source/`  
+3. **Revisa logs de servicios**: `Docs/logs/`
+4. **Ejecuta tests en modo visible**: Comenta `--headless` en ChromeOptions
+
+### Comandos útiles:
+```bash
+# Ver logs en tiempo real
+tail -f Docs/logs/frontend.log
+tail -f Docs/logs/backend.log
+
+# Abrir última captura
+xdg-open Docs/screenshots/$(ls -t Docs/screenshots | head -n1)
+
+# Limpiar artifacts
+rm -rf Docs/screenshots/* Docs/page-source/*
+
+# Solo tests (sin servicios)
+cd UIAutomationTests && dotnet test
+```
+
+### Requisitos del sistema:
+- ✅ .NET 8 SDK
+- ✅ Node.js + npm  
+- ✅ Google Chrome
+- ✅ ChromeDriver (se descarga automáticamente)
+- ✅ curl (para health checks)
+
+---
+
+## Resultados típicos
+
+**Tests exitosos:**
+- ✅ HomePage_LoadsCorrectly
+- ✅ Navigation_ToCreateForm_Works  
+- ✅ CreateCountry_Form_Validation
+- ✅ CreateNewCountry_Successfully
+- ✅ CountryTable_HasRequiredColumns
+- ✅ Page_Elements_AreInteractive
+
+**Total: 6 tests, ~4 minutos de ejecución**
+
+---
+
+## Notas técnicas
+
+- **ChromeDriver**: Se ejecuta en modo visible por defecto (útil para debug)
+- **Esperas inteligentes**: WebDriverWait para elementos dinámicos de Vue.js
+- **Reutilización de navegador**: OneTimeSetUp para mejor rendimiento
+- **Cross-platform**: Configurado para Linux con `--no-sandbox`
+- **CI/CD ready**: Puede ejecutarse en headless descomentando la opción
 
 ---
 
