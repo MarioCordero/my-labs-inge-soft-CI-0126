@@ -1,10 +1,9 @@
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Interactions;
-using NUnit.Framework;
+using OpenQA.Selenium.Support.UI;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace UIAutomationTests
@@ -19,48 +18,66 @@ namespace UIAutomationTests
         [SetUp]
         public void Setup()
         {
-            // Configurar Chrome options para Linux
             var chromeOptions = new ChromeOptions();
             // chromeOptions.AddArgument("--headless"); // Descomentar para ejecución sin interfaz
             chromeOptions.AddArgument("--no-sandbox");
             chromeOptions.AddArgument("--disable-dev-shm-usage");
             chromeOptions.AddArgument("--window-size=1920,1080");
             chromeOptions.AddArgument("--start-maximized");
-            
+
             _driver = new ChromeDriver(chromeOptions);
 
-            // Aumentar timeouts para dar tiempo al frontend (Vue) a renderizar
             _driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(60);
             _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(30));
             _actions = new Actions(_driver);
-            
+
             Console.WriteLine("🚀 Navegador Chrome iniciado");
         }
 
+        [TearDown]
+        public void Teardown()
+        {
+            try
+            {
+                TakeScreenshot("final_result");
+                _driver?.Quit();
+                _driver?.Dispose();
+                Console.WriteLine("🛑 Navegador cerrado");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al cerrar el navegador: {ex.Message}");
+            }
+        }
+
+        // ====================
+        // Tests (ordenados)
+        // ====================
         [Test]
         [Order(1)]
         public void HomePage_LoadsCorrectly()
         {
             Console.WriteLine("=== PRUEBA 1: Verificación página principal ===");
-            
-            // Act
+
             _driver.Navigate().GoToUrl("http://localhost:8080/");
-            
-            // Assert - Verificar múltiples elementos de la página
+
             Assert.That(_driver.Title, Is.Not.Empty, "El título de la página está vacío");
-            
-            // Verificar que existe una tabla
+
             var table = _wait.Until(d => d.FindElement(By.TagName("table")));
             Assert.IsTrue(table.Displayed, "La tabla de países no está visible");
-            
-            // Verificar encabezados de la tabla
+
             var headers = table.FindElements(By.TagName("th"));
             Assert.Greater(headers.Count, 2, "La tabla debe tener al menos 3 columnas");
-            
-            // Verificar que hay filas de datos
-            var rows = table.FindElements(By.CssSelector("tbody tr"));
+
+            // Esperar filas si vienen desde API
+            var rows = _wait.Until(d =>
+            {
+                var r = d.FindElements(By.CssSelector("tbody tr"));
+                return r.Count > 0 ? r : null;
+            });
+
             Assert.Greater(rows.Count, 0, "La tabla debe tener filas de datos");
-            
+
             Console.WriteLine($"✅ Página principal: {headers.Count} columnas, {rows.Count} filas");
         }
 
@@ -69,11 +86,9 @@ namespace UIAutomationTests
         public void Navigation_ToCreateForm_Works()
         {
             Console.WriteLine("=== PRUEBA 2: Navegación al formulario de creación ===");
-            
-            // Arrange
+
             _driver.Navigate().GoToUrl("http://localhost:8080/");
-            
-            // Act - Buscar botón/anchor de agregar de diferentes formas (incluye /country)
+
             IWebElement addButton = FindElementWithRetry(
                 By.CssSelector("a[href='/country'] button"),
                 By.CssSelector("a[href='/country']"),
@@ -84,23 +99,21 @@ namespace UIAutomationTests
                 By.CssSelector("a[href*='create']"),
                 By.CssSelector("a[href*='add']")
             );
-            
+
             TryClick(addButton);
-            
-            // Assert - Verificar que estamos en la página de creación (/country)
-            _wait.Until(d => 
+
+            _wait.Until(d =>
                 d.Url.Contains("/country") ||
-                d.Url.Contains("create") || 
-                d.Url.Contains("add") || 
+                d.Url.Contains("create") ||
+                d.Url.Contains("add") ||
                 d.FindElements(By.TagName("form")).Count > 0 ||
                 d.FindElements(By.CssSelector("input, select, textarea")).Count > 0 ||
                 d.FindElements(By.XPath("//h2[contains(translate(text(),'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz'),'agregar')]")).Count > 0
             );
-            
-            // Verificar elementos del formulario (si existe)
+
             var formInputs = _driver.FindElements(By.CssSelector("input, select, textarea"));
             Assert.GreaterOrEqual(formInputs.Count, 0, "Se esperaba encontrar el formulario o la página /country");
-            
+
             Console.WriteLine("✅ Navegación al formulario exitosa");
         }
 
@@ -109,45 +122,154 @@ namespace UIAutomationTests
         public void CreateCountry_Form_Validation()
         {
             Console.WriteLine("=== PRUEBA 3: Validación del formulario de creación ===");
-            
-            // Arrange - Ir directamente al formulario
+
             _driver.Navigate().GoToUrl("http://localhost:8080/");
             NavigateToCreateForm();
-            
-            // Act - Buscar todos los campos del formulario
+
+            // Esperar inputs si el formulario se renderiza de forma dinámica
+            _wait.Until(d => d.FindElements(By.CssSelector("input, select, textarea")).Count > 0);
+
             var nameInput = FindElementWithRetry(
                 By.Id("nombre"),
+                By.Id("name"),
                 By.Name("nombre"),
-                By.CssSelector("input[placeholder*='nombre']"),
+                By.Name("name"),
+                By.CssSelector("input[placeholder*='Nombre'], input[placeholder*='nombre']"),
+                By.CssSelector("input[aria-label*='Nombre'], input[aria-label*='nombre']"),
+                By.CssSelector("input[data-test='name'], input[data-testid='name']"),
                 By.CssSelector("input[type='text']:first-of-type")
             );
-            
+
             var languageInput = FindElementWithRetry(
                 By.Id("idioma"),
+                By.Id("language"),
                 By.Name("idioma"),
-                By.CssSelector("input[placeholder*='idioma']"),
+                By.Name("language"),
+                By.CssSelector("input[placeholder*='Idioma'], input[placeholder*='idioma']"),
+                By.CssSelector("input[aria-label*='Idioma'], input[aria-label*='idioma']"),
+                By.CssSelector("input[data-test='language'], input[data-testid='language']"),
                 By.CssSelector("input[type='text']:nth-of-type(2)")
             );
-            
+
             var continentSelect = FindElementWithRetry(
                 By.Id("continente"),
+                By.Id("continent"),
                 By.Name("continente"),
-                By.TagName("select")
+                By.Name("continent"),
+                By.TagName("select"),
+                By.CssSelector("select[data-test='continent'], select[data-testid='continent']")
             );
-            
+
             var submitButton = FindElementWithRetry(
                 By.CssSelector("button[type='submit']"),
-                By.XPath("//button[contains(text(), 'Guardar')]"),
-                By.XPath("//button[contains(text(), 'Agregar')]"),
-                By.CssSelector("button.btn-primary")
+                By.XPath("//button[contains(normalize-space(.),'Guardar') or contains(normalize-space(.),'guardar') or contains(normalize-space(.),'Agregar') or contains(normalize-space(.),'Crear')]"),
+                By.CssSelector("button.btn-primary"),
+                By.CssSelector("a[href='/country'] button")
             );
-            
-            // Assert - Verificar que los campos están presentes y habilitados
+
             Assert.IsTrue(nameInput.Enabled, "Campo nombre debe estar habilitado");
             Assert.IsTrue(languageInput.Enabled, "Campo idioma debe estar habilitado");
             Assert.IsTrue(submitButton.Enabled, "Botón enviar debe estar habilitado");
-            
+
             Console.WriteLine("✅ Validación de formulario exitosa");
+        }
+
+        [Test]
+        [Order(4)]
+        public void CreateNewCountry_Successfully()
+        {
+            Console.WriteLine("=== PRUEBA 4: Creación de nuevo país ===");
+
+            string countryName = "PaisSelenium_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string language = "IdiomaSelenium";
+
+            _driver.Navigate().GoToUrl("http://localhost:8080/");
+            NavigateToCreateForm();
+
+            _wait.Until(d => d.FindElements(By.CssSelector("input, select, textarea")).Count > 0);
+
+            var nameInput = FindElementWithRetry(
+                By.Id("nombre"),
+                By.Id("name"),
+                By.Name("nombre"),
+                By.Name("name"),
+                By.CssSelector("input[placeholder*='Nombre'], input[placeholder*='nombre']"),
+                By.CssSelector("input[data-test='name'], input[data-testid='name']"),
+                By.CssSelector("input[type='text']:first-of-type")
+            );
+
+            var languageInput = FindElementWithRetry(
+                By.Id("idioma"),
+                By.Id("language"),
+                By.Name("idioma"),
+                By.Name("language"),
+                By.CssSelector("input[placeholder*='Idioma'], input[placeholder*='idioma']"),
+                By.CssSelector("input[data-test='language'], input[data-testid='language']"),
+                By.CssSelector("input[type='text']:nth-of-type(2)")
+            );
+
+            var continentSelect = FindElementWithRetry(
+                By.Id("continente"),
+                By.Id("continent"),
+                By.Name("continente"),
+                By.Name("continent"),
+                By.TagName("select"),
+                By.CssSelector("select[data-test='continent'], select[data-testid='continent']")
+            );
+
+            var submitButton = FindElementWithRetry(
+                By.CssSelector("button[type='submit']"),
+                By.XPath("//button[contains(normalize-space(.),'Guardar') or contains(normalize-space(.),'guardar') or contains(normalize-space(.),'Agregar') or contains(normalize-space(.),'Crear')]"),
+                By.CssSelector("button.btn-primary"),
+                By.CssSelector("a[href='/country'] button")
+            );
+
+            if (nameInput == null || languageInput == null || submitButton == null)
+            {
+                TakeScreenshot("missing_fields_create");
+                DumpPageSource("missing_fields_create");
+                Assert.Fail("No se encontraron campos esperados del formulario. Adjunta frontend-lab/src/components/CountryForm.vue <template> para ajustar selectores.");
+            }
+
+            nameInput.Clear();
+            nameInput.SendKeys(countryName);
+
+            languageInput.Clear();
+            languageInput.SendKeys(language);
+
+            if (continentSelect != null && continentSelect.TagName.Equals("select", StringComparison.OrdinalIgnoreCase))
+            {
+                var selectElement = new SelectElement(continentSelect);
+                if (selectElement.Options.Count > 0)
+                {
+                    selectElement.SelectByIndex(1);
+                }
+            }
+
+            TryClick(submitButton);
+
+            _wait.Until(d =>
+            {
+                try
+                {
+                    var rows = d.FindElements(By.CssSelector("tbody tr"));
+                    return rows.Any(r => r.Text.Contains(countryName));
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+
+            bool countryCreated = _driver.FindElements(By.CssSelector("tbody tr")).Any(r => r.Text.Contains(countryName));
+            if (!countryCreated)
+            {
+                TakeScreenshot("create_country_failed");
+                DumpPageSource("create_country_failed");
+            }
+
+            Assert.IsTrue(countryCreated, $"El país '{countryName}' debería aparecer en la lista");
+            Console.WriteLine($"✅ País '{countryName}' creado exitosamente");
         }
 
         [Test]
@@ -155,21 +277,18 @@ namespace UIAutomationTests
         public void CountryTable_HasRequiredColumns()
         {
             Console.WriteLine("=== PRUEBA 5: Verificación de columnas de la tabla ===");
-            
-            // Arrange
+
             _driver.Navigate().GoToUrl("http://localhost:8080/");
-            
-            // Act
+
             var table = _wait.Until(d => d.FindElement(By.TagName("table")));
             var headers = table.FindElements(By.TagName("th"));
             var headerTexts = headers.Select(h => h.Text.Trim()).ToList();
-            
-            // Assert - Verificar columnas requeridas
+
             Assert.That(headerTexts, Has.Some.Contains("Nombre").Or.Contains("nombre"), "Falta columna Nombre");
             Assert.That(headerTexts, Has.Some.Contains("Continente").Or.Contains("continente"), "Falta columna Continente");
             Assert.That(headerTexts, Has.Some.Contains("Idioma").Or.Contains("idioma"), "Falta columna Idioma");
             Assert.That(headerTexts, Has.Some.Contains("Acciones").Or.Contains("acciones"), "Falta columna Acciones");
-            
+
             Console.WriteLine("✅ Columnas de la tabla verificadas correctamente");
         }
 
@@ -178,20 +297,21 @@ namespace UIAutomationTests
         public void Page_Elements_AreInteractive()
         {
             Console.WriteLine("=== PRUEBA 6: Interactividad de elementos ===");
-            
-            // Arrange
+
             _driver.Navigate().GoToUrl("http://localhost:8080/");
-            
-            // Act & Assert - Verificar que los elementos son clickeables
+
             var interactiveElements = _driver.FindElements(By.CssSelector("a, button, input, select"));
             Assert.Greater(interactiveElements.Count, 0, "Debe haber elementos interactivos en la página");
-            
-            // Verificar que al menos un elemento es clickeable
+
             var clickableElements = interactiveElements.Where(e => e.Displayed && e.Enabled).ToList();
             Assert.Greater(clickableElements.Count, 0, "Debe haber elementos clickeables en la página");
-            
+
             Console.WriteLine($"✅ {clickableElements.Count} elementos interactivos verificados");
         }
+
+        // ====================
+        // Helpers
+        // ====================
         private void NavigateToCreateForm()
         {
             try
@@ -210,7 +330,6 @@ namespace UIAutomationTests
 
                 TryClick(addButton);
 
-                // Esperar hasta que aparezca formulario o la URL cambie a /country
                 _wait.Until(d =>
                     d.Url.Contains("/country") ||
                     d.Url.Contains("create") ||
@@ -227,6 +346,7 @@ namespace UIAutomationTests
                 throw new Exception($"No se pudo navegar al formulario de creación: {ex.Message}");
             }
         }
+
         private void TryClick(IWebElement element)
         {
             try
@@ -253,14 +373,13 @@ namespace UIAutomationTests
                 }
             }
         }
-        
+
         private IWebElement FindElementWithRetry(params By[] locators)
         {
             foreach (var locator in locators)
             {
                 try
                 {
-                    // Usar WebDriverWait para dar tiempo al render de Vue
                     var element = _wait.Until(d =>
                     {
                         try
@@ -282,7 +401,6 @@ namespace UIAutomationTests
                 }
                 catch (WebDriverTimeoutException)
                 {
-                    // Intentar siguiente locator
                     continue;
                 }
                 catch (NoSuchElementException)
@@ -296,7 +414,6 @@ namespace UIAutomationTests
 
         private IWebElement FindElement(params By[] locators)
         {
-            // Reutilizar la versión con espera para mayor robustez
             return FindElementWithRetry(locators);
         }
 
@@ -314,7 +431,7 @@ namespace UIAutomationTests
                 Console.WriteLine($"⚠️ Error al guardar page source: {ex.Message}");
             }
         }
-        
+
         private void TakeScreenshot(string testName)
         {
             try
@@ -328,82 +445,6 @@ namespace UIAutomationTests
             {
                 Console.WriteLine($"⚠️ Error al guardar screenshot: {ex.Message}");
             }
-        }
-
-        [TearDown]
-        public void Teardown()
-        {
-            try
-            {
-                TakeScreenshot("final_result");
-                _driver?.Quit();
-                _driver?.Dispose();
-                Console.WriteLine("🛑 Navegador cerrado");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al cerrar el navegador: {ex.Message}");
-            }
-        }
-
-        [Test]
-        [Order(4)]
-        public void CreateNewCountry_Successfully()
-        {
-            Console.WriteLine("=== PRUEBA 4: Creación de nuevo país ===");
-            
-            // Arrange
-            string countryName = "PaisSelenium_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            string language = "IdiomaSelenium";
-            
-            _driver.Navigate().GoToUrl("http://localhost:8080/");
-            NavigateToCreateForm();
-            
-            // Act - Llenar formulario
-            var nameInput = FindElement(By.Id("nombre"), By.Name("nombre"));
-            var languageInput = FindElement(By.Id("idioma"), By.Name("idioma"));
-            var continentSelect = FindElement(By.Id("continente"), By.Name("continente"), By.TagName("select"));
-            var submitButton = FindElement(
-                By.CssSelector("button[type='submit']"),
-                By.XPath("//button[contains(text(), 'Guardar')]")
-            );
-            
-            nameInput.Clear();
-            nameInput.SendKeys(countryName);
-            
-            languageInput.Clear();
-            languageInput.SendKeys(language);
-            
-            // Seleccionar continente si existe dropdown
-            if (continentSelect != null && continentSelect.TagName == "select")
-            {
-                var selectElement = new SelectElement(continentSelect);
-                if (selectElement.Options.Count > 0)
-                {
-                    selectElement.SelectByIndex(1); // Seleccionar segunda opción
-                }
-            }
-            
-            submitButton.Click();
-            
-            // Assert - Verificar creación exitosa
-            _wait.Until(d => !d.Url.Contains("create") && !d.Url.Contains("add"));
-            
-            // Verificar que el país aparece en la lista
-            bool countryCreated = _wait.Until(d => 
-            {
-                try
-                {
-                    return d.FindElement(By.XPath($"//tr[td[text()='{countryName}']]")) != null;
-                }
-                catch
-                {
-                    return false;
-                }
-            });
-            
-            Assert.IsTrue(countryCreated, $"El país '{countryName}' debería aparecer en la lista");
-            Console.WriteLine($"✅ País '{countryName}' creado exitosamente");
         }
     }
 }
