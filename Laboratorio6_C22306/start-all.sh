@@ -4,9 +4,13 @@ set -euo pipefail
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRONT="$BASEDIR/frontend-lab"
 BACK="$BASEDIR/backend-lab"
-LOGDIR="$BASEDIR/logs"
-ARTIFACTS_DIR="$BASEDIR/UIAutomationTests/artifacts"
-mkdir -p "$LOGDIR" "$ARTIFACTS_DIR"
+-LOGDIR="$BASEDIR/logs"
+-ARTIFACTS_DIR="$BASEDIR/UIAutomationTests/artifacts"
+-mkdir -p "$LOGDIR" "$ARTIFACTS_DIR"
++DOCS_DIR="$BASEDIR/Docs"
++LOGDIR="$DOCS_DIR/logs"
++ARTIFACTS_DIR="$DOCS_DIR/artifacts"
++mkdir -p "$LOGDIR" "$ARTIFACTS_DIR" "$DOCS_DIR"
 
 # timeouts
 START_TIMEOUT=60   # segundos para que cada servicio responda
