@@ -14,24 +14,24 @@ namespace ExamTwo.Repositories
 
         public Task<IEnumerable<Coffee>> GetAllCoffeesAsync()
         {
-            var coffees = _db.keyValues.Select(kv => new Coffee
+            var coffees = _db.CoffeeInventory.Select(kv => new Coffee
             {
                 Name = kv.Key,
                 Stock = kv.Value,
-                PriceInCents = _db.keyValues2.GetValueOrDefault(kv.Key)
+                PriceInCents = _db.CoffeePrices.GetValueOrDefault(kv.Key)
             }).ToList();
             return Task.FromResult<IEnumerable<Coffee>>(coffees);
         }
 
         public Task<int> GetQuantityAsync(string coffeeName)
         {
-            _db.keyValues.TryGetValue(coffeeName, out int quantity);
+            _db.CoffeeInventory.TryGetValue(coffeeName, out int quantity);
             return Task.FromResult(quantity);
         }
 
         public Task<int> GetPriceInCentsAsync(string coffeeName)
         {
-            _db.keyValues2.TryGetValue(coffeeName, out int price);
+            _db.CoffeePrices.TryGetValue(coffeeName, out int price);
             return Task.FromResult(price);
         }
 
@@ -39,9 +39,9 @@ namespace ExamTwo.Repositories
         {
             foreach (var item in purchasedItems)
             {
-                if (_db.keyValues.ContainsKey(item.Key))
+                if (_db.CoffeeInventory.ContainsKey(item.Key))
                 {
-                    _db.keyValues[item.Key] -= item.Value;
+                    _db.CoffeeInventory[item.Key] -= item.Value;
                 }
             }
             return Task.FromResult(true);
