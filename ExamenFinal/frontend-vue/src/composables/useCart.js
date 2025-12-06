@@ -1,17 +1,12 @@
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import API_ENDPOINTS from '../lib/apiConfig'
 
 export function useCart() {
   const cart = ref([])
   const paidAmount = ref(0)
   const showSuccess = ref(false)
   const changeBreakdown = ref([])
-
-  const coffeeOptions = [
-    { id: "americano", name: "Americano", price: 950, stock: 12 },
-    { id: "cappuccino", name: "Cappuccino", price: 1200, stock: 0 },
-    { id: "latte", name: "Latte", price: 1400, stock: 8 },
-    { id: "mocaccino", name: "Mocaccino", price: 1500, stock: 15 },
-  ]
+  const coffeeOptions = ref([])
 
   const paymentDenominations = [
     { value: 1000, label: "1000", type: "bill" },
@@ -27,6 +22,25 @@ export function useCart() {
 
   const change = computed(() => paidAmount.value - totalCost.value)
   const canPay = computed(() => paidAmount.value >= totalCost.value && totalCost.value > 0)
+
+  const fetchCoffees = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.COFFEE.GET_ALL)
+      const data = await response.json()
+      coffeeOptions.value = data.map((coffee) => ({
+        id: coffee.name.toLowerCase(),
+        name: coffee.name,
+        price: coffee.priceInCents,
+        stock: coffee.stock
+      }))
+    } catch (error) {
+      console.error('Failed to fetch coffees:', error)
+    }
+  }
+
+  onMounted(() => {
+    fetchCoffees()
+  })
 
   const addToCart = (coffee) => {
     const existing = cart.value.find((item) => item.id === coffee.id)
