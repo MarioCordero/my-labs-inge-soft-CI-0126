@@ -12,31 +12,36 @@ namespace ExamTwo.Repositories
             _db = db;
         }
 
-        public Task<IEnumerable<Coffee>> GetAllCoffeesAsync()
+        public async Task<IEnumerable<Coffee>> GetAllCoffeesAsync()
         {
+            // Note: Yield() helps to mimic asynchronous behavior for in-memory operations. It can be removed when using a real database.
+            await Task.Yield();
             var coffees = _db.CoffeeInventory.Select(kv => new Coffee
             {
                 Name = kv.Key,
                 Stock = kv.Value,
                 PriceInCents = _db.CoffeePrices.GetValueOrDefault(kv.Key)
             }).ToList();
-            return Task.FromResult<IEnumerable<Coffee>>(coffees);
+            return coffees;
         }
 
-        public Task<int> GetQuantityAsync(string coffeeName)
+        public async Task<int> GetQuantityAsync(string coffeeName)
         {
+            await Task.Yield();
             _db.CoffeeInventory.TryGetValue(coffeeName, out int quantity);
-            return Task.FromResult(quantity);
+            return quantity;
         }
 
-        public Task<int> GetPriceInCentsAsync(string coffeeName)
+        public async Task<int> GetPriceInCentsAsync(string coffeeName)
         {
+            await Task.Yield();
             _db.CoffeePrices.TryGetValue(coffeeName, out int price);
-            return Task.FromResult(price);
+            return price;
         }
 
-        public Task<bool> UpdateInventoryAsync(Dictionary<string, int> purchasedItems)
+        public async Task<bool> UpdateInventoryAsync(Dictionary<string, int> purchasedItems)
         {
+            await Task.Yield();
             foreach (var item in purchasedItems)
             {
                 if (_db.CoffeeInventory.ContainsKey(item.Key))
@@ -44,7 +49,7 @@ namespace ExamTwo.Repositories
                     _db.CoffeeInventory[item.Key] -= item.Value;
                 }
             }
-            return Task.FromResult(true);
+            return true;
         }
     }
 }
