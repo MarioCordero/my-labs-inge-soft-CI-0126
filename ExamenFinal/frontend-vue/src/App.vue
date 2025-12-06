@@ -6,7 +6,7 @@
         <div class="flex items-center gap-3">
           <div class="p-2 bg-accent/10 rounded-lg">
             <svg class="w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+              <path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z" />
             </svg>
           </div>
           <h1 class="text-3xl font-bold">Coffee Machine</h1>
