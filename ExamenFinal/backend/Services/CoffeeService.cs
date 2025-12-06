@@ -35,68 +35,32 @@ namespace ExamTwo.Services
 
             int price = await CalculateTotalCostAsync(request);
             int totalPaid = await GetTotalPaid(request);
-            int change = totalPaid - price;
 
+            var paymentCheck = CheckPayment(totalPaid, price);
+            if (!paymentCheck.IsSuccess)
+                return paymentCheck;
+
+            int change = totalPaid - price;
             _logger.LogInformation("Total paid: {TotalPaid}, Price: {Price}, Change: {Change}", totalPaid, price, change);
 
-            var dispenseResult = await CheckDispense(change, result);
-            if (!dispenseResult.IsSuccess)
-                return dispenseResult;
+            var changeCheck = await CheckAndDispenseChange(change);
+            if (!changeCheck.IsSuccess)
+                return changeCheck;
 
-            await _coinRepository.AddPaymentToInventoryAsync(request.Payment); // Posible bug, the user may need it's own coin for the change
+            await _coinRepository.AddPaymentToInventoryAsync(request.Payment);
             await _coffeeRepository.UpdateInventoryAsync(request.Order);
-            return result;
-        }
 
-        private async Task<int> GetTotalPaid(OrderRequest request)
-        {
-            int totalPaid = 0;
-            if (request.Payment != null)
-            {
-                totalPaid += request.Payment.Coins?.Sum() ?? 0;
-                totalPaid += request.Payment.Bills?.Sum() ?? 0;
-            }
-            return totalPaid;
-        }
-
-        private async Task<ChangeResult> CheckDispense(int change, ChangeResult result)
-        {
-            var dispenseResult = await _coinRepository.TryDispenseChangeAsync(change);
-
-            if (change < 0)
-            {
-                result.IsSuccess = false;
-                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
-                result.ErrorMessage = CoffeeMachineErrorMessages.InvalidPayment;
-                return result;
-            }
-            if (dispenseResult == null || (dispenseResult.Count == 0 && change > 0))
-            {
-                result.IsSuccess = false;
-                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
-                result.ErrorMessage = "No hay suficiente cambio disponible.";
-                return result;
-            }
             result.IsSuccess = true;
             result.ErrorCode = CoffeeMachineErrorCode.None;
             result.ErrorMessage = string.Empty;
+            result.ChangeAmount = change;
+            result.ChangeBreakdown = changeCheck.ChangeBreakdown;
             return result;
         }
 
-        private async Task<int> CalculateTotalCostAsync(OrderRequest request)
-        {
-            int totalCost = 0;
-            foreach (var item in request.Order)
-            {
-                var price = await _coffeeRepository.GetPriceInCentsAsync(item.Key);
-                totalCost += price * item.Value;
-            }
-            return totalCost;
-        }
         private async Task<ChangeResult> CheckOrder(OrderRequest request, ChangeResult result)
         {
             var coffeeOptions = await _coffeeRepository.GetAllCoffeesAsync();
-
             if (coffeeOptions == null)
             {
                 result.IsSuccess = false;
@@ -137,9 +101,67 @@ namespace ExamTwo.Services
                 }
             }
             result.IsSuccess = true;
-            result.ErrorCode = CoffeeMachineErrorCode.None;
-            result.ErrorMessage = string.Empty;
             return result;
+        }
+
+        private async Task<int> GetTotalPaid(OrderRequest request)
+        {
+            int totalPaid = 0;
+            if (request.Payment != null)
+            {
+                totalPaid += request.Payment.Coins?.Sum() ?? 0;
+                totalPaid += request.Payment.Bills?.Sum() ?? 0;
+            }
+            return totalPaid;
+        }
+
+        private ChangeResult CheckPayment(int totalPaid, int price)
+        {
+            var result = new ChangeResult();
+            if (totalPaid < price)
+            {
+                result.IsSuccess = false;
+                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
+                result.ErrorMessage = CoffeeMachineErrorMessages.InvalidPayment;
+                return result;
+            }
+            result.IsSuccess = true;
+            return result;
+        }
+
+        private async Task<ChangeResult> CheckAndDispenseChange(int change)
+        {
+            var result = new ChangeResult();
+            var changeBreakdown = await _coinRepository.TryDispenseChangeAsync(change);
+
+            if (change < 0)
+            {
+                result.IsSuccess = false;
+                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
+                result.ErrorMessage = CoffeeMachineErrorMessages.InvalidPayment;
+                return result;
+            }
+            if (changeBreakdown == null || (changeBreakdown.Count == 0 && change > 0))
+            {
+                result.IsSuccess = false;
+                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
+                result.ErrorMessage = "No hay suficiente cambio disponible.";
+                return result;
+            }
+            result.IsSuccess = true;
+            result.ChangeBreakdown = changeBreakdown;
+            return result;
+        }
+
+        private async Task<int> CalculateTotalCostAsync(OrderRequest request)
+        {
+            int totalCost = 0;
+            foreach (var item in request.Order)
+            {
+                var price = await _coffeeRepository.GetPriceInCentsAsync(item.Key);
+                totalCost += price * item.Value;
+            }
+            return totalCost;
         }
     }
 }
