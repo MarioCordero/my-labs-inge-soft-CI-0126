@@ -6,11 +6,13 @@ namespace ExamTwo.Controllers
 {
     public class CoffeeMachineController : Controller
     {
-        private readonly ICoffeeService _coffeeService; 
+        private readonly ICoffeeService _coffeeService;
+        private readonly ICoinService _coinService;
 
-        public CoffeeMachineController(ICoffeeService coffeeService)
+        public CoffeeMachineController(ICoffeeService coffeeService, ICoinService coinService)
         {
             _coffeeService = coffeeService;
+            _coinService = coinService;
         }
 
         [HttpGet("getCoffees")]
@@ -23,7 +25,7 @@ namespace ExamTwo.Controllers
         [HttpGet("getPaymentDenominations")]
         public async Task<ActionResult<PaymentDenominations>> GetPaymentDenominations()
         {
-            var denominations = await _coffeeService.GetPaymentDenominationsAsync();
+            var denominations = await _coinService.GetPaymentDenominationsAsync();
             return Ok(denominations);
         }
 
