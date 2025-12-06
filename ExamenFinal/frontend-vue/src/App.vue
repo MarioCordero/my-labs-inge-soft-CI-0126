@@ -133,7 +133,7 @@ export default {
 
     watch(showSuccess, (newVal) => {
       if (newVal) {
-        countdownSeconds.value = 3
+        countdownSeconds.value = 7
         const interval = setInterval(() => {
           countdownSeconds.value -= 1
           if (countdownSeconds.value <= 0) {
