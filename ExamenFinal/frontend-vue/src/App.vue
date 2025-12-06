@@ -47,6 +47,27 @@
       </div>
     </main>
 
+    <!-- Error Modal -->
+    <div v-if="showError" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
+      <div class="bg-card rounded-lg p-8 max-w-md w-full mx-4 border border-red-500/30">
+        <div class="flex justify-center mb-4">
+          <div class="p-3 bg-red-500/10 rounded-full">
+            <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-2xl font-bold text-center mb-2 text-red-500">Error</h3>
+        <p class="text-muted-foreground text-center mb-6">{{ errorMessage }}</p>
+        <button
+          @click="closeError"
+          class="w-full rounded-lg bg-red-500 text-white font-bold py-3 hover:bg-red-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+
     <!-- Success Modal -->
     <div v-if="showSuccess" class="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50">
       <div class="bg-card rounded-lg p-8 max-w-md w-full mx-4 border border-border">
@@ -93,6 +114,8 @@ export default {
       cart,
       paidAmount,
       showSuccess,
+      showError,
+      errorMessage,
       changeBreakdown,
       coffeeOptions,
       paymentDenominations,
@@ -103,6 +126,7 @@ export default {
       updateQuantity,
       addPayment,
       handlePay,
+      closeError,
     } = useCart()
 
     const countdownSeconds = ref(3)
@@ -123,6 +147,8 @@ export default {
       cart,
       paidAmount,
       showSuccess,
+      showError,
+      errorMessage,
       changeBreakdown,
       coffeeOptions,
       paymentDenominations,
@@ -133,6 +159,7 @@ export default {
       updateQuantity,
       addPayment,
       handlePay,
+      closeError,
       countdownSeconds,
     }
   },
