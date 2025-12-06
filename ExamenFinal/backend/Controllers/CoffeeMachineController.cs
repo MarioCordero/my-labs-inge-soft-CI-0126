@@ -14,21 +14,21 @@ namespace ExamTwo.Controllers
         }
 
         [HttpGet("getCoffees")]
-        public ActionResult<IEnumerable<Coffee>> GetCoffeeOptions()
+        public async Task<ActionResult<IEnumerable<Coffee>>> GetCoffeeOptions()
         {
-            var coffees = _coffeeService.GetCoffeeOptions(); 
+            var coffees = await _coffeeService.GetCoffeeOptionsAsync(); 
             return Ok(coffees);
         }
 
         [HttpPost("buyCoffee")]
-        public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
+        public async Task<ActionResult<string>> BuyCoffee([FromBody] OrderRequest request)
         {
             if (request == null || request.Order == null || request.Order.Count == 0)
                 return BadRequest("Orden vacía.");
 
             try
             {
-                ChangeResult result = _coffeeService.ProcessPurchase(request);
+                ChangeResult result = await _coffeeService.ProcessPurchaseAsync(request);
 
                 if (result.IsSuccess)
                 {
