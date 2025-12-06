@@ -1,14 +1,18 @@
 using ExamTwo.Database;
 using ExamTwo.Models;
+using Microsoft.Extensions.Logging;
 
 namespace ExamTwo.Repositories
 {
     public class CoinRepository : ICoinRepository
     {
         private readonly DatabaseMostra _db;
-        public CoinRepository(DatabaseMostra db)
+        private readonly ILogger<CoinRepository> _logger;
+
+        public CoinRepository(DatabaseMostra db, ILogger<CoinRepository> logger)
         {
             _db = db;
+            _logger = logger;
         }
         
         public Task<Dictionary<int, int>> GetAvailableCoinsAsync()
@@ -57,7 +61,6 @@ namespace ExamTwo.Repositories
             int remainingChange = amountNeeded;
             Dictionary<int, int> changeBreakdown = new Dictionary<int, int>();
             var tempCoins = new Dictionary<int, int>(_db.CoinInventory);
-
             var denominations = tempCoins.Keys.OrderByDescending(x => x).ToList();
 
             foreach (var denomination in denominations)
