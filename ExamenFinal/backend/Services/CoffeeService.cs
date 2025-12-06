@@ -1,5 +1,6 @@
 using ExamTwo.Models;
 using ExamTwo.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace ExamTwo.Services
 {
@@ -7,10 +8,13 @@ namespace ExamTwo.Services
     {
         private readonly ICoffeeRepository _coffeeRepository;
         private readonly ICoinRepository _coinRepository;
-        public CoffeeService(ICoffeeRepository coffeeRepository, ICoinRepository coinRepository)
+        private readonly ILogger<CoffeeService> _logger;
+
+        public CoffeeService(ICoffeeRepository coffeeRepository, ICoinRepository coinRepository, ILogger<CoffeeService> logger)
         {
             _coffeeRepository = coffeeRepository;
             _coinRepository = coinRepository;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Coffee>> GetCoffeeOptionsAsync()
@@ -30,19 +34,21 @@ namespace ExamTwo.Services
                 return checkResult;
 
             int price = await CalculateTotalCostAsync(request);
-            int totalPaid = GetTotalPaid(request);
+            int totalPaid = await GetTotalPaid(request);
             int change = totalPaid - price;
+
+            _logger.LogInformation("Total paid: {TotalPaid}, Price: {Price}, Change: {Change}", totalPaid, price, change);
 
             var dispenseResult = await CheckDispense(change, result);
             if (!dispenseResult.IsSuccess)
                 return dispenseResult;
 
-            await _coinRepository.AddPaymentToInventoryAsync(request.Payment);
+            await _coinRepository.AddPaymentToInventoryAsync(request.Payment); // Posible bug, the user may need it's own coin for the change
             await _coffeeRepository.UpdateInventoryAsync(request.Order);
             return result;
         }
 
-        private int GetTotalPaid(OrderRequest request)
+        private async Task<int> GetTotalPaid(OrderRequest request)
         {
             int totalPaid = 0;
             if (request.Payment != null)
