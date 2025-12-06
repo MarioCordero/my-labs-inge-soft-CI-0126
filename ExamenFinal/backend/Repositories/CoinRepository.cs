@@ -19,17 +19,35 @@ namespace ExamTwo.Repositories
         {
             return Task.FromResult(new Dictionary<int, int>(_db.CoinInventory));
         }
+        public Task<Dictionary<int, int>> GetAvailableBillsAsync()
+        {
+            return Task.FromResult(new Dictionary<int, int>(_db.BillsInventory));
+        }
+
+        public async Task<PaymentDenominations> GetPaymentDenominationsAsync()
+        {
+            var coinInventory = await GetAvailableCoinsAsync();
+            var billsInventory = await GetAvailableBillsAsync();
+            return new PaymentDenominations
+            {
+                Coins = coinInventory,
+                Bills = billsInventory
+            };
+        }
 
         public Task AddPaymentToInventoryAsync(PaymentDetails payment)
         {
+            if (payment == null)
+                return Task.CompletedTask;
+
             // Lists to dictionaries with counts
-            var coinDict = payment.Coins
+            var coinDict = (payment.Coins ?? new List<int>())
                 .GroupBy(c => c)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var billDict = payment.Bills != null
-                ? payment.Bills.GroupBy(b => b).ToDictionary(g => g.Key, g => g.Count())
-                : new Dictionary<int, int>();
+            var billDict = (payment.Bills ?? new List<int>())
+                .GroupBy(b => b)
+                .ToDictionary(g => g.Key, g => g.Count());
 
             // Add coins
             foreach (var coin in coinDict)
