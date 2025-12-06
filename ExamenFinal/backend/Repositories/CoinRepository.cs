@@ -1,4 +1,5 @@
 using ExamTwo.Database;
+using ExamTwo.Models;
 
 namespace ExamTwo.Repositories
 {
@@ -15,15 +16,35 @@ namespace ExamTwo.Repositories
             return Task.FromResult(new Dictionary<int, int>(_db.CoinInventory));
         }
 
-        public Task AddPaymentToInventoryAsync(Dictionary<int, int> paymentCoins)
-        {   
-            foreach (var coin in paymentCoins)
+        public Task AddPaymentToInventoryAsync(OrderRequest payment)
+        {
+            // Lists to dictionaries with counts
+            var coinDict = payment.Payment.Coins
+                .GroupBy(c => c)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var billDict = payment.Payment.Bills != null
+                ? payment.Payment.Bills.GroupBy(b => b).ToDictionary(g => g.Key, g => g.Count())
+                : new Dictionary<int, int>();
+
+            // Add coins
+            foreach (var coin in coinDict)
             {
                 if (_db.CoinInventory.ContainsKey(coin.Key))
-                {
                     _db.CoinInventory[coin.Key] += coin.Value;
-                }
+                else
+                    _db.CoinInventory[coin.Key] = coin.Value;
             }
+
+            // Add bills
+            foreach (var bill in billDict)
+            {
+                if (_db.BillsInventory.ContainsKey(bill.Key))
+                    _db.BillsInventory[bill.Key] += bill.Value;
+                else
+                    _db.BillsInventory[bill.Key] = bill.Value;
+            }
+
             return Task.CompletedTask;
         }
 
@@ -36,10 +57,13 @@ namespace ExamTwo.Repositories
             int remainingChange = amountNeeded;
             Dictionary<int, int> changeBreakdown = new Dictionary<int, int>();
             var tempCoins = new Dictionary<int, int>(_db.CoinInventory);
-            foreach (var denomination in _db.SortedDenominations)
+
+            var denominations = tempCoins.Keys.OrderByDescending(x => x).ToList();
+
+            foreach (var denomination in denominations)
             {
                 if (remainingChange == 0) break;
-                
+
                 int required = remainingChange / denomination;
                 int available = tempCoins.GetValueOrDefault(denomination);
 
@@ -55,7 +79,7 @@ namespace ExamTwo.Repositories
 
             if (remainingChange == 0)
             {
-                foreach(var kvp in tempCoins)
+                foreach (var kvp in tempCoins)
                 {
                     _db.CoinInventory[kvp.Key] = kvp.Value;
                 }
@@ -63,7 +87,7 @@ namespace ExamTwo.Repositories
             }
             else
             {
-                return Task.FromResult<Dictionary<int, int>?>(null); 
+                return Task.FromResult<Dictionary<int, int>?>(null);
             }
         }
     }

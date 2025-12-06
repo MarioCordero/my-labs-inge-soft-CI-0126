@@ -1,3 +1,5 @@
+using ExamTwo.Models;
+
 namespace ExamTwo.Repositories
 {
     public interface ICoinRepository
@@ -6,6 +8,6 @@ namespace ExamTwo.Repositories
         
         Task<Dictionary<int, int>?> TryDispenseChangeAsync(int amountNeeded);
         
-        Task AddPaymentToInventoryAsync(Dictionary<int, int> paymentCoins);
+        Task AddPaymentToInventoryAsync(OrderRequest payment);
     }
 }

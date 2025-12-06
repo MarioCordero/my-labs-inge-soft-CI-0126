@@ -4,7 +4,7 @@ namespace ExamTwo.Models
     {
         public Dictionary<string, int> Order { get; set; } // Example: { "Espresso": 2, "Latte": 1 } 
         public int TotalPayment { get; set; } 
-        // public PaymentDetails Payment { get; set; } I can use later 
+        public PaymentDetails Payment { get; set; } 
     }
     
     public class PaymentDetails

@@ -25,7 +25,9 @@
             { 50, 50 },
             { 25, 25 }
         };
-
-        public List<int> SortedDenominations { get; } = new List<int> { 500, 100, 50, 25 };
+        public Dictionary<int, int> BillsInventory = new Dictionary<int, int>
+        {
+            { 1000, 20 }
+        };
     }
 }
