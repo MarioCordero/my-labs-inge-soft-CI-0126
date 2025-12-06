@@ -1,6 +1,6 @@
-﻿namespace ExamTwo.Controllers
+﻿namespace ExamTwo.Database
 {
-    public class Database
+    public class DatabaseMostra
     {
         public Dictionary<string, int> keyValues = new Dictionary<string, int>
         {
@@ -25,6 +25,6 @@
             { 50, 50 },
             { 25, 25}
         };
-
+        public List<int> SortedDenominations { get; } = new List<int> { 500, 100, 50, 25 }; // The coins sorted in descending order
     }
 }
