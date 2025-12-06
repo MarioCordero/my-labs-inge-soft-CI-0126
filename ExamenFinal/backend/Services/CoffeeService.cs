@@ -47,23 +47,20 @@ namespace ExamTwo.Services
             if (change < 0)
             {
                 result.IsSuccess = false;
-                result.ErrorMessage = "Pago insuficiente.";
+                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
+                result.ErrorMessage = CoffeeMachineErrorMessages.InvalidPayment;
                 return result;
             }
-            if (dispenseResult == null)
+            if (dispenseResult == null || (dispenseResult.Count == 0 && change > 0))
             {
                 result.IsSuccess = false;
-                result.ErrorMessage = "No hay suficiente cambio disponible.";
-                return result;
-            }
-            if(dispenseResult.Count == 0 && change > 0)
-            {
-                result.IsSuccess = false;
+                result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
                 result.ErrorMessage = "No hay suficiente cambio disponible.";
                 return result;
             }
             result.IsSuccess = true;
-            result.ErrorMessage = "";
+            result.ErrorCode = CoffeeMachineErrorCode.None;
+            result.ErrorMessage = string.Empty;
             return result;
         }
 
@@ -79,20 +76,20 @@ namespace ExamTwo.Services
         }
         private async Task<ChangeResult> CheckOrder(OrderRequest request, ChangeResult result)
         {
-
-            var coinInventory = await _coinRepository.GetAvailableCoinsAsync();
             var coffeeOptions = await _coffeeRepository.GetAllCoffeesAsync();
 
             if (coffeeOptions == null)
             {
                 result.IsSuccess = false;
-                result.ErrorMessage = "No hay cafés disponibles.";
+                result.ErrorCode = CoffeeMachineErrorCode.InternalError;
+                result.ErrorMessage = CoffeeMachineErrorMessages.InternalError;
                 return result;
             }
-            if (request.Order == null)
+            if (request.Order == null || request.Order.Count == 0)
             {
                 result.IsSuccess = false;
-                result.ErrorMessage = "Error, la solicitud de pedido está vacía.";
+                result.ErrorCode = CoffeeMachineErrorCode.EmptyOrder;
+                result.ErrorMessage = CoffeeMachineErrorMessages.EmptyOrder;
                 return result;
             }
             foreach (var item in request.Order)
@@ -101,24 +98,28 @@ namespace ExamTwo.Services
                 if (coffee == null)
                 {
                     result.IsSuccess = false;
+                    result.ErrorCode = CoffeeMachineErrorCode.OutOfStock;
                     result.ErrorMessage = $"El café '{item.Key}' no existe.";
                     return result;
                 }
                 if (item.Value <= 0)
                 {
                     result.IsSuccess = false;
-                    result.ErrorMessage = $"La cantidad solicitada para '{item.Key}' debe ser mayor que cero.";
+                    result.ErrorCode = CoffeeMachineErrorCode.InvalidPayment;
+                    result.ErrorMessage = CoffeeMachineErrorMessages.InvalidPayment;
                     return result;
                 }
                 if (coffee.Stock < item.Value)
                 {
                     result.IsSuccess = false;
-                    result.ErrorMessage = $"No hay suficiente stock para '{item.Key}'. Stock disponible: {coffee.Stock}.";
+                    result.ErrorCode = CoffeeMachineErrorCode.OutOfStock;
+                    result.ErrorMessage = $"{CoffeeMachineErrorMessages.OutOfStock} para '{item.Key}'. Stock disponible: {coffee.Stock}.";
                     return result;
                 }
             }
             result.IsSuccess = true;
-            result.ErrorMessage = "";
+            result.ErrorCode = CoffeeMachineErrorCode.None;
+            result.ErrorMessage = string.Empty;
             return result;
         }
     }

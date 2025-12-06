@@ -4,6 +4,7 @@ namespace ExamTwo.Models
     {
         public bool IsSuccess { get; set; }
         public string ErrorMessage { get; set; }
+        public CoffeeMachineErrorCode ErrorCode { get; set; }
         public int ChangeAmount { get; set; } // Cash to return to the customer
         public Dictionary<int, int> ChangeBreakdown { get; set; }  // Key: Value of the coin, Value: Quantity of that coin
         // Create the string message for the change breakdown
