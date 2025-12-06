@@ -12,16 +12,16 @@ namespace ExamTwo.Repositories
         
         public Task<Dictionary<int, int>> GetAvailableCoinsAsync()
         {
-            return Task.FromResult(new Dictionary<int, int>(_db.keyValues3));
+            return Task.FromResult(new Dictionary<int, int>(_db.CoinInventory));
         }
 
         public Task AddPaymentToInventoryAsync(Dictionary<int, int> paymentCoins)
         {   
             foreach (var coin in paymentCoins)
             {
-                if (_db.keyValues3.ContainsKey(coin.Key))
+                if (_db.CoinInventory.ContainsKey(coin.Key))
                 {
-                    _db.keyValues3[coin.Key] += coin.Value;
+                    _db.CoinInventory[coin.Key] += coin.Value;
                 }
             }
             return Task.CompletedTask;
@@ -35,7 +35,7 @@ namespace ExamTwo.Repositories
             }
             int remainingChange = amountNeeded;
             Dictionary<int, int> changeBreakdown = new Dictionary<int, int>();
-            var tempCoins = new Dictionary<int, int>(_db.keyValues3);
+            var tempCoins = new Dictionary<int, int>(_db.CoinInventory);
             foreach (var denomination in _db.SortedDenominations)
             {
                 if (remainingChange == 0) break;
@@ -57,7 +57,7 @@ namespace ExamTwo.Repositories
             {
                 foreach(var kvp in tempCoins)
                 {
-                    _db.keyValues3[kvp.Key] = kvp.Value;
+                    _db.CoinInventory[kvp.Key] = kvp.Value;
                 }
                 return Task.FromResult<Dictionary<int, int>?>(changeBreakdown);
             }
