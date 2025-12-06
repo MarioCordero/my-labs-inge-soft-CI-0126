@@ -16,15 +16,15 @@ namespace ExamTwo.Repositories
             return Task.FromResult(new Dictionary<int, int>(_db.CoinInventory));
         }
 
-        public Task AddPaymentToInventoryAsync(OrderRequest payment)
+        public Task AddPaymentToInventoryAsync(PaymentDetails payment)
         {
             // Lists to dictionaries with counts
-            var coinDict = payment.Payment.Coins
+            var coinDict = payment.Coins
                 .GroupBy(c => c)
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            var billDict = payment.Payment.Bills != null
-                ? payment.Payment.Bills.GroupBy(b => b).ToDictionary(g => g.Key, g => g.Count())
+            var billDict = payment.Bills != null
+                ? payment.Bills.GroupBy(b => b).ToDictionary(g => g.Key, g => g.Count())
                 : new Dictionary<int, int>();
 
             // Add coins

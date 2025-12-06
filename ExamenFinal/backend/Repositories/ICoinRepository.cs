@@ -8,6 +8,6 @@ namespace ExamTwo.Repositories
         
         Task<Dictionary<int, int>?> TryDispenseChangeAsync(int amountNeeded);
         
-        Task AddPaymentToInventoryAsync(OrderRequest payment);
+        Task AddPaymentToInventoryAsync(PaymentDetails payment);
     }
 }

@@ -30,14 +30,27 @@ namespace ExamTwo.Services
                 return checkResult;
 
             int price = await CalculateTotalCostAsync(request);
-            int change = request.TotalPayment - price;
+            int totalPaid = GetTotalPaid(request);
+            int change = totalPaid - price;
+
             var dispenseResult = await CheckDispense(change, result);
-            if(!dispenseResult.IsSuccess)
+            if (!dispenseResult.IsSuccess)
                 return dispenseResult;
 
-            await _coinRepository.AddPaymentToInventoryAsync(request);
+            await _coinRepository.AddPaymentToInventoryAsync(request.Payment);
             await _coffeeRepository.UpdateInventoryAsync(request.Order);
             return result;
+        }
+
+        private int GetTotalPaid(OrderRequest request)
+        {
+            int totalPaid = 0;
+            if (request.Payment != null)
+            {
+                totalPaid += request.Payment.Coins?.Sum() ?? 0;
+                totalPaid += request.Payment.Bills?.Sum() ?? 0;
+            }
+            return totalPaid;
         }
 
         private async Task<ChangeResult> CheckDispense(int change, ChangeResult result)
