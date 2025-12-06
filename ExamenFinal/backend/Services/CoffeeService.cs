@@ -1,9 +1,3 @@
-// Services/CoffeeService.cs
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ExamTwo.Models;
 using ExamTwo.Repositories;
 
@@ -22,6 +16,16 @@ namespace ExamTwo.Services
         public async Task<IEnumerable<Coffee>> GetCoffeeOptionsAsync()
         {
             return await _coffeeRepository.GetAllCoffeesAsync();
+        }
+
+        public Task<ChangeResult> ProcessPurchaseAsync(OrderRequest request)
+        { // MOCK FUNCTION
+            var result = new ChangeResult
+            {
+                ErrorMessage = null,
+                ChangeBreakdown = new Dictionary<int, int>()
+            };
+            return Task.FromResult(result);
         }
     }
 }
