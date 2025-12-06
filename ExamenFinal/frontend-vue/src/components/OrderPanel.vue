@@ -82,12 +82,6 @@
         {{ cart.length === 0 ? 'Select Coffee' : `Pay ₡${totalCost.toLocaleString()}` }}
       </button>
     </div>
-
-    <!-- Change Display -->
-    <div v-if="paidAmount > totalCost && totalCost > 0" class="rounded-lg border border-accent/30 bg-accent/5 p-4">
-      <p class="text-sm text-muted-foreground mb-2">Change:</p>
-      <p class="text-2xl font-bold text-accent">₡{{ change.toLocaleString() }}</p>
-    </div>
   </div>
 </template>
 
