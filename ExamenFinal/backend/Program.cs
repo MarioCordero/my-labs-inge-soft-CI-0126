@@ -20,6 +20,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<DatabaseMostra>();
 builder.Services.AddScoped<ICoffeeService, CoffeeService>();
+builder.Services.AddScoped<ICoinService, CoinService>();
 builder.Services.AddScoped<ICoffeeRepository, CoffeeRepository>();
 builder.Services.AddScoped<ICoinRepository, CoinRepository>();
 
