@@ -20,6 +20,13 @@ namespace ExamTwo.Controllers
             return Ok(coffees);
         }
 
+        [HttpGet("getPaymentDenominations")]
+        public async Task<ActionResult<PaymentDenominations>> GetPaymentDenominations()
+        {
+            var denominations = await _coffeeService.GetPaymentDenominationsAsync();
+            return Ok(denominations);
+        }
+
         [HttpPost("buyCoffee")]
         public async Task<ActionResult<string>> BuyCoffee([FromBody] OrderRequest request)
         {
@@ -38,8 +45,10 @@ namespace ExamTwo.Controllers
                 {
                     return Ok(new
                     {
-                        Code = CoffeeMachineErrorCode.None,
-                        Message = result.GetFormattedChangeMessage()
+                        code = CoffeeMachineErrorCode.None,
+                        message = result.GetFormattedChangeMessage(),
+                        changeAmount = result.ChangeAmount,
+                        changeBreakdown = result.ChangeBreakdown
                     });
                 }
                 else
