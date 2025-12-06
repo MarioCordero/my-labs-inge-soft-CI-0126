@@ -24,7 +24,11 @@ namespace ExamTwo.Controllers
         public async Task<ActionResult<string>> BuyCoffee([FromBody] OrderRequest request)
         {
             if (request == null || request.Order == null || request.Order.Count == 0)
-                return BadRequest("Orden vacía.");
+                return BadRequest(new
+                {
+                    Code = CoffeeMachineErrorCode.EmptyOrder,
+                    Message = CoffeeMachineErrorMessages.EmptyOrder
+                });
 
             try
             {
@@ -32,16 +36,28 @@ namespace ExamTwo.Controllers
 
                 if (result.IsSuccess)
                 {
-                    return Ok(result.GetFormattedChangeMessage());
+                    return Ok(new
+                    {
+                        Code = CoffeeMachineErrorCode.None,
+                        Message = result.GetFormattedChangeMessage()
+                    });
                 }
                 else
                 {
-                    return BadRequest(result.ErrorMessage);
+                    return BadRequest(new
+                    {
+                        Code = CoffeeMachineErrorCode.InternalError,
+                        Message = result.ErrorMessage ?? CoffeeMachineErrorMessages.InternalError
+                    });
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Error interno del sistema: " + ex.Message);
+                return StatusCode(500, new
+                {
+                    Code = CoffeeMachineErrorCode.InternalError,
+                    Message = CoffeeMachineErrorMessages.InternalError + ": " + ex.Message
+                });
             }
         }
     }
