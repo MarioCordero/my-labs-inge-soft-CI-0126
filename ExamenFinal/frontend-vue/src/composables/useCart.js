@@ -10,15 +10,12 @@ export function useCart() {
   const changeBreakdown = ref([])
   const changeAmount = ref(0)
   const coffeeOptions = ref([])
+  const paymentDenominations = ref([])
+  const machineInventory = ref({
+    coins: {},
+    bills: {}
+  })
   const isLoading = ref(false)
-
-  const paymentDenominations = [
-    { value: 1000, label: "1000", type: "bill" },
-    { value: 500, label: "500", type: "coin" },
-    { value: 100, label: "100", type: "coin" },
-    { value: 50, label: "50", type: "coin" },
-    { value: 25, label: "25", type: "coin" },
-  ]
 
   const totalCost = computed(() => {
     return cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -47,8 +44,63 @@ export function useCart() {
     }
   }
 
+  const fetchMachineInventory = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.COFFEE.GET_DENOMINATIONS)
+      const data = await response.json()
+      
+      // Guardar el inventario
+      machineInventory.value = {
+        coins: data.coins || {},
+        bills: data.bills || {}
+      }
+
+      // Convertir el inventario a formato de denominaciones para los botones
+      const denominations = []
+      
+      // Agregar billetes
+      if (data.bills && Object.keys(data.bills).length > 0) {
+        Object.keys(data.bills).forEach(value => {
+          denominations.push({
+            value: parseInt(value),
+            label: value,
+            type: "bill"
+          })
+        })
+      }
+      
+      // Agregar monedas
+      if (data.coins && Object.keys(data.coins).length > 0) {
+        Object.keys(data.coins).forEach(value => {
+          denominations.push({
+            value: parseInt(value),
+            label: value,
+            type: "coin"
+          })
+        })
+      }
+      
+      // Ordenar de mayor a menor
+      paymentDenominations.value = denominations.sort((a, b) => b.value - a.value)
+      
+      console.log('Payment denominations:', paymentDenominations.value)
+      console.log('Machine inventory:', machineInventory.value)
+    } catch (err) {
+      console.error('Failed to fetch machine inventory:', err)
+      // Fallback a valores por defecto si falla
+      paymentDenominations.value = [
+        { value: 1000, label: "1000", type: "bill" },
+        { value: 500, label: "500", type: "coin" },
+        { value: 100, label: "100", type: "coin" },
+        { value: 50, label: "50", type: "coin" },
+        { value: 25, label: "25", type: "coin" },
+      ]
+    }
+  }
+
   onMounted(() => {
     fetchCoffees()
+    fetchMachineInventory()
   })
 
   const addToCart = (coffee) => {
@@ -150,9 +202,10 @@ export function useCart() {
           paidAmount.value = 0
           changeBreakdown.value = []
           changeAmount.value = 0
-          // Refetch coffees after purchase
+          // Refetch coffees and machine inventory after purchase
           fetchCoffees()
-        }, 3000)
+          fetchMachineInventory()
+        }, 7000)
       } else {
         // Error from backend
         errorMessage.value = result.message || 'Payment failed'
@@ -177,6 +230,7 @@ export function useCart() {
     changeAmount,
     coffeeOptions,
     paymentDenominations,
+    machineInventory,
     totalCost,
     change,
     canPay,

@@ -4,6 +4,7 @@ export const API_ENDPOINTS = {
   COFFEE: {
     GET_ALL: `${API_BASE_URL}/getCoffees`,
     BUY: `${API_BASE_URL}/buyCoffee`,
+    GET_DENOMINATIONS: `${API_BASE_URL}/getPaymentDenominations`,
   },
 }
 
