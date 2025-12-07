@@ -8,13 +8,11 @@ namespace ExamTwo.Repositories
     {
         private readonly DatabaseMostra _db;
         private readonly ILogger<CoinRepository> _logger;
-
         public CoinRepository(DatabaseMostra db, ILogger<CoinRepository> logger)
         {
             _db = db;
             _logger = logger;
         }
-        
         public Task<Dictionary<int, int>> GetAvailableCoinsAsync()
         {
             return Task.FromResult(new Dictionary<int, int>(_db.CoinInventory));
@@ -23,7 +21,6 @@ namespace ExamTwo.Repositories
         {
             return Task.FromResult(new Dictionary<int, int>(_db.BillsInventory));
         }
-
         public async Task<PaymentDenominations> GetPaymentDenominationsAsync()
         {
             var coinInventory = await GetAvailableCoinsAsync();
@@ -34,42 +31,6 @@ namespace ExamTwo.Repositories
                 Bills = billsInventory
             };
         }
-
-        public Task AddPaymentToInventoryAsync(PaymentDetails payment)
-        {
-            if (payment == null)
-                return Task.CompletedTask;
-
-            // Lists to dictionaries with counts
-            var coinDict = (payment.Coins ?? new List<int>())
-                .GroupBy(c => c)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            var billDict = (payment.Bills ?? new List<int>())
-                .GroupBy(b => b)
-                .ToDictionary(g => g.Key, g => g.Count());
-
-            // Add coins
-            foreach (var coin in coinDict)
-            {
-                if (_db.CoinInventory.ContainsKey(coin.Key))
-                    _db.CoinInventory[coin.Key] += coin.Value;
-                else
-                    _db.CoinInventory[coin.Key] = coin.Value;
-            }
-
-            // Add bills
-            foreach (var bill in billDict)
-            {
-                if (_db.BillsInventory.ContainsKey(bill.Key))
-                    _db.BillsInventory[bill.Key] += bill.Value;
-                else
-                    _db.BillsInventory[bill.Key] = bill.Value;
-            }
-
-            return Task.CompletedTask;
-        }
-
         public Task<Dictionary<int, int>?> TryDispenseChangeAsync(int amountNeeded)
         {
             if (amountNeeded <= 0)
@@ -110,6 +71,40 @@ namespace ExamTwo.Repositories
             {
                 return Task.FromResult<Dictionary<int, int>?>(null);
             }
+        }
+        public Task AddPaymentToInventoryAsync(PaymentDetails payment)
+        {
+            if (payment == null)
+                return Task.CompletedTask;
+
+            // Lists to dictionaries with counts
+            var coinDict = (payment.Coins ?? new List<int>())
+                .GroupBy(c => c)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var billDict = (payment.Bills ?? new List<int>())
+                .GroupBy(b => b)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            // Add coins
+            foreach (var coin in coinDict)
+            {
+                if (_db.CoinInventory.ContainsKey(coin.Key))
+                    _db.CoinInventory[coin.Key] += coin.Value;
+                else
+                    _db.CoinInventory[coin.Key] = coin.Value;
+            }
+
+            // Add bills
+            foreach (var bill in billDict)
+            {
+                if (_db.BillsInventory.ContainsKey(bill.Key))
+                    _db.BillsInventory[bill.Key] += bill.Value;
+                else
+                    _db.BillsInventory[bill.Key] = bill.Value;
+            }
+
+            return Task.CompletedTask;
         }
     }
 }
